@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, MapPin, Info, X, AlertCircle, RefreshCw, Map as MapIcon, ZoomIn, ZoomOut, Maximize, Edit3, Save, Plus, Trash2, Upload, Camera } from 'lucide-react';
+import { ArrowLeft, MapPin, Info, X, AlertCircle, RefreshCw, Map as MapIcon, ZoomIn, ZoomOut, Maximize, Edit3, Save, Plus, Trash2, Upload, Camera, Download } from 'lucide-react';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { regions as initialRegions, Region } from './constants';
 
@@ -36,6 +36,17 @@ export default function App() {
   const saveRegions = (newRegions: Region[]) => {
     setRegions(newRegions);
     localStorage.setItem('yunnan_map_regions', JSON.stringify(newRegions));
+  };
+
+  // 导出数据为 JSON 文件
+  const exportData = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(regions, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "wamao-map-data.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
   };
 
   const handleRegionClick = (region: Region) => {
@@ -187,6 +198,16 @@ export default function App() {
           </motion.div>
           
           <div className="flex items-center gap-3 sm:gap-6">
+            {isEditMode && (
+              <button 
+                onClick={exportData}
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-base font-bold transition-all bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
+                title="导出当前按钮数据"
+              >
+                <Download className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden sm:inline">导出数据</span>
+              </button>
+            )}
             <button 
               onClick={() => {
                 setIsEditMode(!isEditMode);
@@ -419,41 +440,59 @@ export default function App() {
               </div>
 
               {/* 图片展示区 */}
-              <div className="flex-1 relative flex items-center justify-center p-4 sm:p-8 overflow-hidden" onClick={e => e.stopPropagation()}>
-                {selectedRegion.imageUrl ? (
-                  <div className="relative w-full h-full flex items-center justify-center group">
-                    <TransformWrapper
-                      initialScale={1}
-                      minScale={0.5}
-                      maxScale={8}
-                      centerOnInit={true}
-                    >
-                      <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }} contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <img 
-                          src={selectedRegion.imageUrl} 
-                          alt={selectedRegion.name} 
-                          className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-grab active:cursor-grabbing"
-                          draggable={false}
-                        />
-                      </TransformComponent>
-                    </TransformWrapper>
-                    <button 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 flex items-center gap-2 bg-black/60 hover:bg-black/80 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-full backdrop-blur-md transition-all sm:opacity-0 group-hover:opacity-100 shadow-xl border border-white/10 text-sm sm:text-base z-10"
-                    >
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span>更换图片</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center w-full max-w-2xl aspect-video border-2 border-dashed border-white/20 rounded-2xl sm:rounded-3xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group p-4 text-center" onClick={() => fileInputRef.current?.click()}>
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
-                      <Upload className="w-8 h-8 sm:w-8 sm:h-8 text-white/80" />
+              <div className="flex-1 flex flex-col relative p-4 sm:p-8 overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="flex-1 relative flex items-center justify-center min-h-0">
+                  {selectedRegion.imageUrl ? (
+                    <div className="relative w-full h-full flex items-center justify-center group">
+                      <TransformWrapper
+                        initialScale={1}
+                        minScale={0.5}
+                        maxScale={8}
+                        centerOnInit={true}
+                      >
+                        <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }} contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <img 
+                            src={selectedRegion.imageUrl} 
+                            alt={selectedRegion.name} 
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-grab active:cursor-grabbing"
+                            draggable={false}
+                          />
+                        </TransformComponent>
+                      </TransformWrapper>
+                      <button 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 flex items-center gap-2 bg-black/60 hover:bg-black/80 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-full backdrop-blur-md transition-all sm:opacity-0 group-hover:opacity-100 shadow-xl border border-white/10 text-sm sm:text-base z-10"
+                      >
+                        <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>更换图片</span>
+                      </button>
                     </div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">上传区域图片</h3>
-                    <p className="text-white/50 text-xs sm:text-base">点击选择本地图片，展示 {selectedRegion.name} 的风采</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex flex-col items-center justify-center w-full max-w-2xl aspect-video border-2 border-dashed border-white/20 rounded-2xl sm:rounded-3xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group p-4 text-center" onClick={() => fileInputRef.current?.click()}>
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
+                        <Upload className="w-8 h-8 sm:w-8 sm:h-8 text-white/80" />
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">上传区域图片</h3>
+                      <p className="text-white/50 text-xs sm:text-base">点击选择本地图片，展示 {selectedRegion.name} 的风采</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 图片路径输入框 */}
+                <div className="mt-4 flex items-center gap-3 w-full max-w-2xl mx-auto bg-white/10 p-3 rounded-xl border border-white/20 shadow-lg">
+                  <span className="text-white/80 text-sm font-medium pl-2 whitespace-nowrap">直接绑定 public 图片:</span>
+                  <input 
+                    type="text" 
+                    placeholder="例如: /1.jpg" 
+                    className="flex-1 bg-black/20 border border-white/10 rounded-lg px-3 py-1.5 text-white placeholder-white/30 focus:outline-none focus:border-white/40 focus:bg-black/40 text-sm transition-all"
+                    value={selectedRegion.imageUrl?.startsWith('data:') ? '' : (selectedRegion.imageUrl || '')}
+                    onChange={(e) => {
+                      const updatedRegion = { ...selectedRegion, imageUrl: e.target.value };
+                      setSelectedRegion(updatedRegion);
+                      saveRegions(regions.map(r => r.id === updatedRegion.id ? updatedRegion : r));
+                    }}
+                  />
+                </div>
                 
                 <input 
                   type="file" 
